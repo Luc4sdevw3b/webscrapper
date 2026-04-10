@@ -1,0 +1,1 @@
+O Projeto é o seguinte: vamos fazer um web scrapper para ir todo dia no kalunga e ver o preço do office 365
