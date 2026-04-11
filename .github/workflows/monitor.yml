@@ -2,11 +2,12 @@ name: Monitor de Preços Kalunga
 
 on:
   schedule:
+    # 07:00, 14:00 e 18:00 Brasília (UTC-3)
     - cron: '0 10,17,21 * * *'
   workflow_dispatch:
 
 env:
-  # Mantém os scripts internos do GitHub rodando no motor JS mais novo
+  # Isso força o GitHub a usar o Node 24 e silencia avisos de versões antigas
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -21,8 +22,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          cache: 'npm' # Isso acelera o processo nas próximas vezes
+          node-version: '24' # Garantindo o uso da v24
+          cache: 'npm'
 
       - name: Instalar dependências
         run: npm install
