@@ -1,0 +1,41 @@
+name: Monitor Kalunga 2026
+on:
+  schedule:
+    # 7h (10h UTC), 13h (16h UTC) e 20h (23h UTC)
+    - cron: '0 10,16,23 * * *'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      # Action oficial para gerenciar navegadores e dependências de sistema
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Scraper
+        env:
+          PRODUCT_URL: ${{ secrets.PRODUCT_URL }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: npm start
+
+      - name: Commit JSON
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add precos.json
+          git commit -m "update: precos.json [skip ci]" || echo "Sem mudanças"
+          git push
