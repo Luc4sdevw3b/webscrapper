@@ -2,9 +2,12 @@ name: Monitor de Preços Kalunga
 
 on:
   schedule:
-    # 07:00, 14:00 e 18:00 Brasília (UTC-3) -> 10:00, 17:00, 21:00 UTC
     - cron: '0 10,17,21 * * *'
   workflow_dispatch:
+
+env:
+  # Mantém os scripts internos do GitHub rodando no motor JS mais novo
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
@@ -13,12 +16,13 @@ jobs:
       contents: write
     steps:
       - name: Checkout código
-        uses: actions/checkout@v4 # Versão mais atualizada
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Usando a versão estável mais atualizada
+          node-version: '24'
+          cache: 'npm' # Isso acelera o processo nas próximas vezes
 
       - name: Instalar dependências
         run: npm install
@@ -33,5 +37,5 @@ jobs:
           git config --global user.name 'PrecoBot'
           git config --global user.email 'bot@noreply.github.com'
           git add precos.json
-          git commit -m "Atualização automática de preços [skip ci]" || echo "Sem mudanças"
+          git commit -m "Atualização de preços [skip ci]" || echo "Sem mudanças"
           git push
