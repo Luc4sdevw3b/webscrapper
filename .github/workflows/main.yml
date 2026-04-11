@@ -1,41 +1,41 @@
-name: Monitor Kalunga 2026
+name: Scraper Kalunga 2026 (Docker Optimized)
 on:
   schedule:
-    # 7h (10h UTC), 13h (16h UTC) e 20h (23h UTC)
-    - cron: '0 10,16,23 * * *'
+    - cron: '0 10,16,23 * * *' # 7h, 13h, 20h BRT
   workflow_dispatch:
 
 jobs:
-  scrape:
+  run-scraper:
     runs-on: ubuntu-latest
+    # Aqui está o segredo: usamos a imagem oficial que já vem com Node e Browsers
+    container:
+      image: mcr.microsoft.com/playwright:v1.50.0-jammy 
+    
     permissions:
       contents: write
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 24
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-
-      - name: Install dependencies
+      # Como a imagem já tem Node, só precisamos instalar as deps do seu projeto
+      - name: Install Project Dependencies
         run: npm install
-
-      # Action oficial para gerenciar navegadores e dependências de sistema
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
 
       - name: Run Scraper
         env:
           PRODUCT_URL: ${{ secrets.PRODUCT_URL }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          # No Docker, o Playwright roda melhor com essa flag de env
+          CI: true
         run: npm start
 
-      - name: Commit JSON
+      - name: Commit and Push
+        if: always()
         run: |
+          # No Docker, às vezes o Git reclama de permissão de diretório
+          git config --global --add safe.directory /__w/kalunga-price-tracker/kalunga-price-tracker
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add precos.json
-          git commit -m "update: precos.json [skip ci]" || echo "Sem mudanças"
+          git commit -m "database: update prices [skip ci]" || echo "No changes"
           git push
