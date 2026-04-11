@@ -1,15 +1,14 @@
-name: Scraper Kalunga 2026 (Docker Optimized)
+name: Scraper Kalunga 2026
 on:
   schedule:
-    - cron: '0 10,16,23 * * *' # 7h, 13h, 20h BRT
+    - cron: '0 10,16,23 * * *'
   workflow_dispatch:
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
-    # Aqui está o segredo: usamos a imagem oficial que já vem com Node e Browsers
     container:
-      image: mcr.microsoft.com/playwright:v1.50.0-jammy 
+      image: mcr.microsoft.com/playwright:v1.59.1-jammy
     
     permissions:
       contents: write
@@ -17,23 +16,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Como a imagem já tem Node, só precisamos instalar as deps do seu projeto
       - name: Install Project Dependencies
+        id: install
         run: npm install
+
+      # Se o npm install falhar, avisa no Discord antes de morrer
+      - name: Alert Setup Failure
+        if: failure() && steps.install.outcome == 'failure'
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d "{\"content\": \"❌ **ERRO NO SETUP**: O comando 'npm install' falhou no GitHub Actions. Verifique as versões no package.json.\"}" \
+          ${{ secrets.DISCORD_WEBHOOK }}
 
       - name: Run Scraper
         env:
           PRODUCT_URL: ${{ secrets.PRODUCT_URL }}
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          # No Docker, o Playwright roda melhor com essa flag de env
           CI: true
         run: npm start
 
       - name: Commit and Push
         if: always()
         run: |
-          # No Docker, às vezes o Git reclama de permissão de diretório
-          git config --global --add safe.directory /__w/kalunga-price-tracker/kalunga-price-tracker
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add precos.json

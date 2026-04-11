@@ -10,11 +10,12 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "start": "node --env-file=.env scraper.js"
+    "start": "node scraper.js",
+    "dev": "node --env-file=.env scraper.js"
   },
   "dependencies": {
-    "playwright": "latest",
-    "playwright-extra": "^4.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2"
+    "playwright": "1.59.1",
+    "playwright-extra": "latest",
+    "puppeteer-extra-plugin-stealth": "latest"
   }
 }
